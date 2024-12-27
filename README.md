@@ -1,3 +1,6 @@
+
+//Water Level Sensor Program //
+
 const int inputPin = 2;  // D2 for input
 const int outputPin1 = 3; // D3 for output
 const int outputPin2 = 4; // D4 for output
