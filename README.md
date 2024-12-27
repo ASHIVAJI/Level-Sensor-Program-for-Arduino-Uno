@@ -1,0 +1,59 @@
+const int inputPin = 2;  // D2 for input
+const int outputPin1 = 3; // D3 for output
+const int outputPin2 = 4; // D4 for output
+
+// Variables for debouncing
+unsigned long lastDebounceTime = 0;
+const unsigned long debounceDelay = 50;  // 50 ms debounce delay
+bool lastInputState = HIGH;
+bool stableInputState = HIGH;
+
+// Cycle tracking variable
+bool d4Triggered = false;
+
+void setup() {
+  pinMode(inputPin, INPUT_PULLUP);   // Enable internal pull-up on D2
+  pinMode(outputPin1, OUTPUT);       // Set D3 as output
+  pinMode(outputPin2, OUTPUT);       // Set D4 as output
+  digitalWrite(outputPin1, HIGH);    // Ensure outputs are off (HIGH for high-trigger relays)
+  digitalWrite(outputPin2, HIGH);
+}
+
+void loop() {
+  // Read the raw input state
+  bool rawInputState = digitalRead(inputPin);
+
+  // Debouncing logic
+  if (rawInputState != lastInputState) {
+    lastDebounceTime = millis();  // Reset debounce timer
+  }
+  if ((millis() - lastDebounceTime) > debounceDelay) {
+    // If the input has been stable for debounceDelay, update stable state
+    if (rawInputState != stableInputState) {
+      stableInputState = rawInputState;
+
+      // Perform actions based on the stable input state
+      if (stableInputState == LOW) {
+        if (!d4Triggered) {  // Trigger D4 only if it hasn't been triggered yet
+          digitalWrite(outputPin2, LOW); // Activate relay
+          delay(1500);
+          digitalWrite(outputPin2, HIGH); // Deactivate relay
+          d4Triggered = true;  // Mark D4 as triggered
+        }
+
+        // Wait and check D2 again
+        delay(5000);
+        if (digitalRead(inputPin) == LOW) {
+          // D2 still LOW, maintain the current state or perform additional logic if needed
+        }
+      } else {
+        // D2 is HIGH, activate D3 for 1.5 seconds
+        digitalWrite(outputPin1, LOW); // Activate relay
+        delay(1500);
+        digitalWrite(outputPin1, HIGH); // Deactivate relay
+        d4Triggered = false;  // Reset D4 trigger for the next cycle
+      }
+    }
+  }
+  lastInputState = rawInputState;  // Update last input state
+}
